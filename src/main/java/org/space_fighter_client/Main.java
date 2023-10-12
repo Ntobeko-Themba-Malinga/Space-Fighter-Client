@@ -7,6 +7,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 public class Main extends Application {
+    private static final String apiBaseUrl = "http://localhost:5000";
     private static String token;
 
     public static void main(String[] args) {
@@ -27,5 +28,9 @@ public class Main extends Application {
 
     public static void setToken(String token_) {
         token = token_;
+    }
+
+    public static String getApiBaseUrl() {
+        return apiBaseUrl;
     }
 }

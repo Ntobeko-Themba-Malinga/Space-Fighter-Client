@@ -7,7 +7,6 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-
 <AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.space_fighter_client.controllers.LoginController">
    <children>
       <Label layoutX="69.0" layoutY="106.0" text="USERNAME">
@@ -15,13 +14,18 @@
             <Font size="17.0" />
          </font>
       </Label>
-      <TextField layoutX="185.0" layoutY="99.0" prefHeight="33.0" prefWidth="372.0" />
+      <TextField fx:id="username" layoutX="185.0" layoutY="99.0" prefHeight="33.0" prefWidth="372.0" />
       <Label layoutX="69.0" layoutY="174.0" text="PASSWORD">
          <font>
             <Font size="17.0" />
          </font>
       </Label>
-      <PasswordField layoutX="185.0" layoutY="167.0" prefHeight="33.0" prefWidth="372.0" />
-      <Button layoutX="240.0" layoutY="265.0" mnemonicParsing="false" prefHeight="45.0" prefWidth="141.0" text="LOGIN" />
+      <PasswordField fx:id="password" layoutX="185.0" layoutY="167.0" prefHeight="33.0" prefWidth="372.0" />
+      <Button layoutX="240.0" layoutY="265.0" mnemonicParsing="false" onAction="#login" prefHeight="45.0" prefWidth="141.0" text="LOGIN" />
+      <Label fx:id="errorLabel" layoutX="69.0" layoutY="34.0" prefHeight="17.0" prefWidth="485.0" textFill="#ff0606">
+         <font>
+            <Font size="15.0" />
+         </font>
+      </Label>
    </children>
 </AnchorPane>
