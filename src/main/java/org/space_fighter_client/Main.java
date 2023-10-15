@@ -7,7 +7,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 public class Main extends Application {
-    private static final String apiBaseUrl = "http://localhost:5000";
+    private static final String apiBaseUrl = "https://spacefighter-5bdn2qsz.b4a.run";
     private static String token;
 
     public static void main(String[] args) {
