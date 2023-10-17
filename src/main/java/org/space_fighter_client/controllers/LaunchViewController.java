@@ -3,10 +3,13 @@ package org.space_fighter_client.controllers;
 import java.io.IOException;
 import java.util.List;
 
+import javafx.scene.Node;
+import javafx.stage.Stage;
 import org.space_fighter_client.Main;
 import org.space_fighter_client.communication.ServerRequest;
+import org.space_fighter_client.game.Position;
+import org.space_fighter_client.game.World;
 import org.space_fighter_client.util.SceneAlert;
-import org.space_fighter_client.util.SceneChanger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -21,6 +24,27 @@ public class LaunchViewController {
     private Label errorLabel;
     @FXML
     private TextField robotType;
+    private World world;
+
+    private Stage getStage(ActionEvent event) {
+        return (Stage)((Node) event.getSource()).getScene().getWindow();
+    }
+
+    private void buildWorld(ActionEvent event, JsonNode response) {
+        for (JsonNode object : response.get("data").get("objects")) {
+            if (object.get("type").asText().equalsIgnoreCase("world")) {
+                Position topCorner = new Position(
+                        object.get("topLeftCorner").get(0).asInt(),
+                        object.get("topLeftCorner").get(1).asInt()
+                );
+                Position bottomCorner = new Position(
+                        object.get("bottomRightCorner").get(0).asInt(),
+                        object.get("bottomRightCorner").get(1).asInt()
+                );
+                this.world = new World(getStage(event), topCorner, bottomCorner);
+            }
+        }
+    }
 
     private JsonNode buildAndSendLaunchRequest() {
         JSONObject request = new JSONObject();
@@ -35,9 +59,9 @@ public class LaunchViewController {
             SceneAlert.warning("Empty field", "Enter robot type!");
         } else {
             JsonNode serverResponse = buildAndSendLaunchRequest();
-            System.out.println(serverResponse);
             if (serverResponse.get("data").get("result").asText().equalsIgnoreCase("OK")) {
-                SceneChanger.changeScene(event, getClass(), "Game.fxml");
+                buildWorld(event, serverResponse);
+                world.start();
             } else {
                 errorLabel.setText(serverResponse.get("data").get("message").asText());
             }
