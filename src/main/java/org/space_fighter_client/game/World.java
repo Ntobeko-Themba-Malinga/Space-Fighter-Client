@@ -1,6 +1,7 @@
 package org.space_fighter_client.game;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import javafx.animation.AnimationTimer;
 import javafx.scene.Scene;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
@@ -14,14 +15,9 @@ import java.util.List;
 public class World {
 
     private AnchorPane root;
-    private Scene scene;
-    private Stage stage;
+    private final Stage stage;
 
     private Player player;
-
-    private final Position TOP_LEFT_CORNER;
-    private final Position BOTTOM_RIGHT_CORNER;
-
 
     private final double WIDTH;
     private final double WIDTH_MULTIPLIER = 3;
@@ -29,21 +25,35 @@ public class World {
     private final double HEIGHT_MULTIPLIER = 1.5;
 
     public World(Stage stage, Position topLeftCorner, Position bottomRightCorner) {
-        this.TOP_LEFT_CORNER = topLeftCorner;
-        this.BOTTOM_RIGHT_CORNER = bottomRightCorner;
         this.WIDTH = (bottomRightCorner.getX() - topLeftCorner.getX()) * WIDTH_MULTIPLIER;
         this.HEIGHT = (topLeftCorner.getY() - bottomRightCorner.getY()) * HEIGHT_MULTIPLIER;
         this.stage = stage;
     }
 
+    private JSONObject buildRequestWithToken() {
+        JSONObject req = new JSONObject();
+        req.put("token", Main.getToken());
+        return req;
+    }
+
     public void start(JsonNode response) {
         root = new AnchorPane();
         addPlayer(response);
-        scene = new Scene(root, WIDTH, HEIGHT);
+        Scene scene = new Scene(root, WIDTH, HEIGHT);
         String endpoint = "/game";
+
+        AnimationTimer wKey = new AnimationTimer() {
+            @Override
+            public void handle(long l) {
+                JSONObject req = buildRequestWithToken();
+                req.put("command", "forward");
+                req.put("arguments", List.of("1"));
+                updatePlayerPosition(ServerRequest.request(req.toString(), endpoint));
+            }
+        };
+
         scene.setOnKeyPressed(key -> {
-            JSONObject req = new JSONObject();
-            req.put("token", Main.getToken());
+            JSONObject req = buildRequestWithToken();
             switch (key.getCode()) {
                 case A -> {
                     req.put("command", "turn");
@@ -55,11 +65,14 @@ public class World {
                     req.put("arguments", List.of("right"));
                     updateWorld(ServerRequest.request(req.toString(), "/game"));
                 }
-                case W -> {
-                    req.put("command", "forward");
-                    req.put("arguments", List.of("1"));
-                    updatePlayerPosition(ServerRequest.request(req.toString(), endpoint));
-                }
+                case W -> wKey.start();
+
+            }
+        });
+
+        scene.setOnKeyReleased(key -> {
+            switch (key.getCode()) {
+                case W -> wKey.stop();
             }
         });
         stage.setScene(scene);
