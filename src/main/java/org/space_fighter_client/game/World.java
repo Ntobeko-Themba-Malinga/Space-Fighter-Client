@@ -40,24 +40,27 @@ public class World {
         root = new AnchorPane();
         addPlayer(response);
         scene = new Scene(root, WIDTH, HEIGHT);
+        String endpoint = "/game";
         scene.setOnKeyPressed(key -> {
             JSONObject req = new JSONObject();
+            req.put("token", Main.getToken());
             switch (key.getCode()) {
                 case A -> {
                     req.put("command", "turn");
                     req.put("arguments", List.of("left"));
+                    updateWorld(ServerRequest.request(req.toString(), "/game"));
                 }
                 case D -> {
                     req.put("command", "turn");
                     req.put("arguments", List.of("right"));
+                    updateWorld(ServerRequest.request(req.toString(), "/game"));
                 }
                 case W -> {
                     req.put("command", "forward");
                     req.put("arguments", List.of("1"));
+                    updatePlayerPosition(ServerRequest.request(req.toString(), endpoint));
                 }
             }
-            req.put("token", Main.getToken());
-            updateWorld(ServerRequest.request(req.toString(), "/game"));
         });
         stage.setScene(scene);
         stage.show();
@@ -82,7 +85,12 @@ public class World {
     private void addPlayer(JsonNode response) {
         double[] convertedPlayerPos = convertResponseCoordsToLocal(response);
         this.player = new Player(convertedPlayerPos[0], convertedPlayerPos[1]);
-        // this.player = new Player(50, 50);
         root.getChildren().add(player);
+    }
+
+    private void updatePlayerPosition(JsonNode response) {
+        double[] convertedPlayerPos = convertResponseCoordsToLocal(response);
+        this.player.setX(convertedPlayerPos[0]);
+        this.player.setY(convertedPlayerPos[1]);
     }
 }
