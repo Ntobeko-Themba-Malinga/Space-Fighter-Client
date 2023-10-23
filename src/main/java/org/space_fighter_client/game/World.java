@@ -10,17 +10,19 @@ import org.json.JSONObject;
 import org.space_fighter_client.Main;
 import org.space_fighter_client.communication.ServerRequest;
 import org.space_fighter_client.game.objects.Asteroid;
-import org.space_fighter_client.game.objects.Player;
+import org.space_fighter_client.game.objects.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 public class World {
-
     private AnchorPane root;
     private final Stage stage;
 
     private Player player;
+
+    private List<Enemy> enemies;
 
     private final double WIDTH;
     private final double WIDTH_MULTIPLIER = 3;
@@ -31,11 +33,14 @@ public class World {
         this.WIDTH = (bottomRightCorner.getX() - topLeftCorner.getX()) * WIDTH_MULTIPLIER;
         this.HEIGHT = (topLeftCorner.getY() - bottomRightCorner.getY()) * HEIGHT_MULTIPLIER;
         this.stage = stage;
+        this.enemies = new ArrayList<>();
     }
 
-    private JSONObject buildRequestWithToken() {
+    private JSONObject buildRequestWithToken(String command, List<String> arguments) {
         JSONObject req = new JSONObject();
         req.put("token", Main.getToken());
+        req.put("command", command);
+        req.put("arguments", arguments);
         return req;
     }
 
@@ -46,28 +51,42 @@ public class World {
         Scene scene = new Scene(root, WIDTH, HEIGHT);
         String endpoint = "/game";
 
-        AnimationTimer wKey = new AnimationTimer() {
+        AnimationTimer launchTimer = new AnimationTimer() {
+            private long lastUpdate = 0;
+
             @Override
             public void handle(long l) {
-                JSONObject req = buildRequestWithToken();
-                req.put("command", "forward");
-                req.put("arguments", List.of("1"));
-                updatePlayerPosition(ServerRequest.request(req.toString(), endpoint));
+                if ((l - lastUpdate) >= 28_000_000) {
+                    JSONObject req = buildRequestWithToken("look", new ArrayList<>());
+                    updateWorld(ServerRequest.request(req.toString(), endpoint));
+                    lastUpdate = l;
+                }
+            }
+        };
+        launchTimer.start();
+
+        AnimationTimer wKey = new AnimationTimer() {
+            private long lastUpdate = 0;
+
+            @Override
+            public void handle(long l) {
+                if ((l - lastUpdate) >= 28_000_000) {
+                    JSONObject req = buildRequestWithToken("forward", List.of("1"));
+                    updatePlayerPosition(ServerRequest.request(req.toString(), endpoint));
+                    lastUpdate = l;
+                }
             }
         };
 
         scene.setOnKeyPressed(key -> {
-            JSONObject req = buildRequestWithToken();
             switch (key.getCode()) {
                 case A -> {
-                    req.put("command", "turn");
-                    req.put("arguments", List.of("left"));
-                    updateWorld(ServerRequest.request(req.toString(), "/game"));
+                    JSONObject req = buildRequestWithToken("turn", List.of("left"));
+                    updateWorld(ServerRequest.request(req.toString(), endpoint));
                 }
                 case D -> {
-                    req.put("command", "turn");
-                    req.put("arguments", List.of("right"));
-                    updateWorld(ServerRequest.request(req.toString(), "/game"));
+                    JSONObject req = buildRequestWithToken("turn", List.of("right"));
+                    updateWorld(ServerRequest.request(req.toString(), endpoint));
                 }
                 case W -> wKey.start();
 
@@ -84,7 +103,9 @@ public class World {
     }
 
     public void updateWorld(JsonNode response) {
-        System.out.println(response);
+        System.out.println(response + "\n\n");
+        removeEnemies();
+        addEnemies(response);
     }
 
     private double[] convertResponseCoordsToLocal(JsonNode position) {
@@ -120,5 +141,22 @@ public class World {
                 this.root.getChildren().add(asteroid);
             }
         }
+    }
+
+    private void addEnemies(JsonNode response) {
+        System.out.println("\n\n" + response + "\n\n");
+        for (JsonNode object : response.get("data").get("objects")) {
+            if (object.get("type").asText().equalsIgnoreCase("ROBOT")) {
+                double[] convertedPos = convertResponseCoordsToLocal(object.get("position"));
+                Enemy enemy = new Enemy(convertedPos[0], convertedPos[1]);
+                enemies.add(enemy);
+            }
+        }
+        root.getChildren().addAll(enemies);
+    }
+
+    private void removeEnemies() {
+        root.getChildren().removeAll(enemies);
+        enemies.clear();
     }
 }
