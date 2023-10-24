@@ -59,7 +59,6 @@ public class LaunchViewController {
             SceneAlert.warning("Empty field", "Enter robot type!");
         } else {
             JsonNode serverResponse = buildAndSendLaunchRequest();
-            System.out.println(serverResponse);
             if (serverResponse.get("data").get("result").asText().equalsIgnoreCase("OK")) {
                 buildWorld(event, serverResponse);
                 this.world.start(serverResponse);

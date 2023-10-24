@@ -3,18 +3,15 @@ package org.space_fighter_client.game;
 import com.fasterxml.jackson.databind.JsonNode;
 import javafx.animation.AnimationTimer;
 import javafx.scene.Scene;
-import javafx.scene.input.KeyCode;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import org.json.JSONObject;
 import org.space_fighter_client.Main;
 import org.space_fighter_client.communication.ServerRequest;
-import org.space_fighter_client.game.objects.Asteroid;
 import org.space_fighter_client.game.objects.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class World {
     private AnchorPane root;
@@ -94,8 +91,12 @@ public class World {
         });
 
         scene.setOnKeyReleased(key -> {
-            if (Objects.requireNonNull(key.getCode()) == KeyCode.W) {
-                wKey.stop();
+            switch (key.getCode()) {
+                case W -> wKey.stop();
+                case F -> {
+                    JSONObject req = buildRequestWithToken("fire", new ArrayList<>());
+                    addBullet(ServerRequest.request(req.toString(), endpoint));
+                }
             }
         });
         stage.setScene(scene);
@@ -103,7 +104,7 @@ public class World {
     }
 
     public void updateWorld(JsonNode response) {
-        System.out.println(response + "\n\n");
+        // System.out.println(response + "\n\n");
         removeEnemies();
         addEnemies(response);
     }
@@ -116,24 +117,33 @@ public class World {
         double y = position.get(1).asDouble();
         x = (x * WIDTH_MULTIPLIER) + xAdjuster;
         y = ((-1 * y) * HEIGHT_MULTIPLIER) + yAdjuster;
-        System.out.println("x: " + x + " || y: " + y);
         return new double[] {x, y};
+    }
+
+    private double convertDirectionToDouble(String direction) {
+        return switch(direction) {
+            case "EAST" -> 0;
+            case "NORTH" -> 90;
+            case "WEST" -> 180;
+            default -> 270;
+        };
     }
 
     private void addPlayer(JsonNode response) {
         double[] convertedPlayerPos = convertResponseCoordsToLocal(response.get("data").get("status").get("position"));
         this.player = new Player(convertedPlayerPos[0], convertedPlayerPos[1]);
+        this.player.setRotate(convertDirectionToDouble(response.get("data").get("status").get("direction").asText()));
         root.getChildren().add(player);
     }
 
     private void updatePlayerPosition(JsonNode response) {
         double[] convertedPlayerPos = convertResponseCoordsToLocal(response.get("data").get("status").get("position"));
+        this.player.setRotate(convertDirectionToDouble(response.get("data").get("status").get("direction").asText()));
         this.player.setX(convertedPlayerPos[0]);
         this.player.setY(convertedPlayerPos[1]);
     }
 
     private void addAsteroids(JsonNode response) {
-        System.out.println(response.get("data").get("objects"));
         for (JsonNode object : response.get("data").get("objects")) {
             if (object.get("type").asText().equalsIgnoreCase("ASTEROID")) {
                 double[] convertedPos = convertResponseCoordsToLocal(object.get("position"));
@@ -144,7 +154,6 @@ public class World {
     }
 
     private void addEnemies(JsonNode response) {
-        System.out.println("\n\n" + response + "\n\n");
         for (JsonNode object : response.get("data").get("objects")) {
             if (object.get("type").asText().equalsIgnoreCase("ROBOT")) {
                 double[] convertedPos = convertResponseCoordsToLocal(object.get("position"));
@@ -158,5 +167,23 @@ public class World {
     private void removeEnemies() {
         root.getChildren().removeAll(enemies);
         enemies.clear();
+    }
+
+    private void addBullet(JsonNode response) {
+        System.out.println(response + "\n\n");
+        JsonNode hitObject = response.get("data").get("hit_object");
+
+        if (hitObject.get(0) != null) {
+            double[] convertedPos = convertResponseCoordsToLocal(
+                response.get("data").get("hit_object").get(0).get("position")
+            );
+            Bullet bullet = new Bullet(
+                new Position((int)player.getX(), (int)player.getY()), 
+                new Position((int)convertedPos[0], (int)convertedPos[1]),
+                player.getRotate()
+            );
+            root.getChildren().add(bullet);
+            bullet.move(root);
+        }
     }
 }
