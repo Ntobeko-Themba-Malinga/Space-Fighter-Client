@@ -34,6 +34,8 @@ public class World {
     private final double HEIGHT;
     private final double HEIGHT_MULTIPLIER = 1.5;
 
+    
+
     public World(Stage stage, Position topLeftCorner, Position bottomRightCorner) {
         this.WIDTH = (bottomRightCorner.getX() - topLeftCorner.getX()) * WIDTH_MULTIPLIER;
         this.HEIGHT = (topLeftCorner.getY() - bottomRightCorner.getY()) * HEIGHT_MULTIPLIER;
@@ -136,7 +138,6 @@ public class World {
     }
 
     public void updateWorld(JsonNode response) {
-        // System.out.println(response + "\n\n");
         removeEnemies();
         addEnemies(response);
     }
