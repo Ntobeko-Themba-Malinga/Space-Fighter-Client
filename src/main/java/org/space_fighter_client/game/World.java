@@ -3,17 +3,25 @@ package org.space_fighter_client.game;
 import com.fasterxml.jackson.databind.JsonNode;
 import javafx.animation.AnimationTimer;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import org.json.JSONObject;
 import org.space_fighter_client.Main;
 import org.space_fighter_client.communication.ServerRequest;
+import org.space_fighter_client.controllers.LaunchViewController;
 import org.space_fighter_client.game.objects.*;
+import org.space_fighter_client.util.SceneChanger;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class World {
+    private final String endpoint = "/game";
+
     private AnchorPane root;
     private final Stage stage;
 
@@ -41,14 +49,30 @@ public class World {
         return req;
     }
 
+    private void quit(AnimationTimer lookTimer) {
+        lookTimer.stop();
+        Alert alert = new Alert(AlertType.WARNING);
+        alert.setTitle("Quit?");
+        alert.setContentText("Are you sure you want to quit?");
+
+        if (alert.showAndWait().get() == ButtonType.OK) {
+            ServerRequest.request(buildRequestWithToken("quit", new ArrayList<>()).toString(), endpoint);
+            try {
+                SceneChanger.changeScene(stage, LaunchViewController.class, "LaunchView.fxml");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        lookTimer.start();
+    }
+
     public void start(JsonNode response) {
         root = new AnchorPane();
         addPlayer(response);
         addAsteroids(response);
         Scene scene = new Scene(root, WIDTH, HEIGHT);
-        String endpoint = "/game";
 
-        AnimationTimer launchTimer = new AnimationTimer() {
+        AnimationTimer lookTimer = new AnimationTimer() {
             private long lastUpdate = 0;
 
             @Override
@@ -60,7 +84,7 @@ public class World {
                 }
             }
         };
-        launchTimer.start();
+        lookTimer.start();
 
         AnimationTimer wKey = new AnimationTimer() {
             private long lastUpdate = 0;
@@ -96,6 +120,14 @@ public class World {
                 case F -> {
                     JSONObject req = buildRequestWithToken("fire", new ArrayList<>());
                     addBullet(ServerRequest.request(req.toString(), endpoint));
+                }
+                case R -> ServerRequest.request(
+                    buildRequestWithToken("reload", new ArrayList<>()).toString(),
+                    endpoint
+                );
+                case ESCAPE -> {
+                    wKey.stop();
+                    quit(lookTimer);
                 }
             }
         });
