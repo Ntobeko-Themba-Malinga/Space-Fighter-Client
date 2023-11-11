@@ -1,0 +1,17 @@
+.text-field {
+    -fx-padding: 5 10 5 10;
+    -fx-background-color: none;
+    -fx-border-width: 1.5;
+    -fx-border: 2px;
+    -fx-border-color: green; 
+    -fx-text-fill: white;
+}
+
+.button {
+    -fx-background-color: red;
+    -fx-text-fill: white;
+}
+
+/* .button Text {
+    -fx-fill: white;
+} */

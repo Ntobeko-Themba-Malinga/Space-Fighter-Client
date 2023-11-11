@@ -25,6 +25,7 @@ public class LaunchViewController {
     @FXML
     private TextField robotType;
     private World world;
+    private JsonNode robots;
 
     private Stage getStage(ActionEvent event) {
         return (Stage)((Node) event.getSource()).getScene().getWindow();
@@ -67,5 +68,9 @@ public class LaunchViewController {
                 errorLabel.setText(serverResponse.get("data").get("message").asText());
             }
         }
+    }
+
+    public void setRobots(JsonNode robots) {
+        this.robots = robots;
     }
 }

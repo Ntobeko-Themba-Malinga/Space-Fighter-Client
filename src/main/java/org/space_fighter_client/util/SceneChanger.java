@@ -11,12 +11,14 @@ import javafx.stage.Stage;
 
 public class SceneChanger {
 
-    public static <T> void changeScene(ActionEvent event, Class<T> clazz, String template) throws IOException {
+    public static <T> Object changeScene(ActionEvent event, Class<T> clazz, String template) throws IOException {
         Stage stage = (Stage)((Node) event.getSource()).getScene().getWindow();
-        Parent root = FXMLLoader.load(clazz.getResource(template));
+        FXMLLoader loader = new FXMLLoader(clazz.getResource(template));
+        Parent root = loader.load();
         Scene scene = new Scene(root);
         stage.setScene(scene);
         stage.show();
+        return loader.getController();
     }
 
     public static <T> void changeScene(Stage stage, Class<T> clazz, String template) throws IOException {
