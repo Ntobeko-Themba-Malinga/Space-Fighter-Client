@@ -9,23 +9,35 @@ import org.space_fighter_client.Main;
 import org.space_fighter_client.communication.ServerRequest;
 import org.space_fighter_client.game.Position;
 import org.space_fighter_client.game.World;
-import org.space_fighter_client.util.SceneAlert;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Text;
+
 import org.json.JSONObject;
 
 public class LaunchViewController {
     @FXML
+    private AnchorPane pane;
+    @FXML
     private Label errorLabel;
     @FXML
     private TextField robotType;
+    private ToggleGroup robotsGroup = new ToggleGroup();
+
     private World world;
-    private JsonNode robots;
 
     private Stage getStage(ActionEvent event) {
         return (Stage)((Node) event.getSource()).getScene().getWindow();
@@ -48,29 +60,66 @@ public class LaunchViewController {
     }
 
     private JsonNode buildAndSendLaunchRequest() {
+        RadioButton rButton = (RadioButton) robotsGroup.getSelectedToggle();
+        if (rButton == null) return null;
+
         JSONObject request = new JSONObject();
         request.put("command", "launch");
-        request.put("arguments", List.of(robotType.getText().trim()));
+        request.put("arguments", List.of(rButton.getText()));
         request.put("token", Main.getToken());
         return ServerRequest.request(request.toString(), "/game");
     }
 
     public void launch(ActionEvent event) throws IOException {
-        if (robotType.getText().isEmpty()) {
-            SceneAlert.warning("Empty field", "Enter robot type!");
+        JsonNode serverResponse = buildAndSendLaunchRequest();
+        System.out.println(serverResponse.toString());
+        if (serverResponse != null && serverResponse.get("data").get("result").asText().equalsIgnoreCase("OK")) {
+            buildWorld(event, serverResponse);
+            this.world.start(serverResponse);
         } else {
-            JsonNode serverResponse = buildAndSendLaunchRequest();
-            System.out.println(serverResponse.toString());
-            if (serverResponse.get("data").get("result").asText().equalsIgnoreCase("OK")) {
-                buildWorld(event, serverResponse);
-                this.world.start(serverResponse);
-            } else {
-                errorLabel.setText(serverResponse.get("data").get("message").asText());
-            }
+            errorLabel.setText(serverResponse.get("data").get("message").asText());
         }
     }
 
     public void setRobots(JsonNode robots) {
-        this.robots = robots;
+        ImageView backgroundImageView = new ImageView(getClass().getResource("background3.png").toExternalForm());
+        backgroundImageView.setFitHeight(pane.getHeight());
+        backgroundImageView.setFitWidth(pane.getWidth());
+        pane.getChildren().add(0, backgroundImageView);
+        HBox allRobotOptions = new HBox(); 
+
+        for (JsonNode robot : robots.get("types")) {
+            VBox robotInfo = new VBox();
+            robotInfo.setPadding(new Insets(10));
+            Color textFill = Color.WHITE;
+            String robotType = robot.get("type").asText();
+            RadioButton robotRadioButton = new RadioButton(robotType);
+
+            robotInfo.getChildren().addAll(new Text(), new Text());
+            robotRadioButton.setTextFill(textFill);
+            robotRadioButton.setToggleGroup(robotsGroup);
+            robotInfo.getChildren().add(robotRadioButton);
+
+            ImageView imageView = new ImageView(getClass().getResource(robotType + ".PNG").toExternalForm());
+            imageView.setFitWidth(70);
+            imageView.setFitHeight(70);
+            robotInfo.getChildren().add(imageView);
+
+            Text shots = new Text("Shots: " + robot.get("shots").asText());
+            shots.setFill(textFill);
+            Text shield = new Text("Shield: " + robot.get("shield").asText());
+            shield.setFill(textFill);
+            Text reload = new Text("Reload: " + robot.get("reload").asText());
+            reload.setFill(textFill);
+            Text travelDistance = new Text("Bullet Travel Distance: " + robot.get("bullet_travel_distance").asText());
+            travelDistance.setFill(textFill);
+            Text damage = new Text("Damage: " + robot.get("damage").asText());
+            damage.setFill(textFill);
+
+            robotInfo.getChildren().addAll(List.of(new Text(), shots, shield, reload, travelDistance, damage));
+            allRobotOptions.getChildren().add(robotInfo);
+        }
+        allRobotOptions.setPadding(new Insets(50));
+        pane.getChildren().add(allRobotOptions);
     }
 }

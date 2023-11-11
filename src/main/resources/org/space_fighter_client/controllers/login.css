@@ -12,6 +12,10 @@
     -fx-text-fill: white;
 }
 
+#launchBtn {
+    -fx-background-color: green;
+}
+
 /* .button Text {
     -fx-fill: white;
 } */

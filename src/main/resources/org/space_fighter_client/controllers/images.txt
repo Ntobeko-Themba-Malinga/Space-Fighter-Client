@@ -1,2 +1,3 @@
 background1.jpg: https://opengameart.org/content/space-background
+background2.jpg: https://opengameart.org/content/space-backgrounds-9
 

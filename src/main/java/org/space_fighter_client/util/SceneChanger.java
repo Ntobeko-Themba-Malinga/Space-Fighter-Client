@@ -16,6 +16,7 @@ public class SceneChanger {
         FXMLLoader loader = new FXMLLoader(clazz.getResource(template));
         Parent root = loader.load();
         Scene scene = new Scene(root);
+        scene.getStylesheets().add(clazz.getResource("login.css").toExternalForm());
         stage.setScene(scene);
         stage.show();
         return loader.getController();
