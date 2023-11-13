@@ -17,7 +17,7 @@ public class Asteroid extends ImageView {
         setFitWidth(SIZE);
         setFitHeight(SIZE);
         Random random = new Random();
-        String pic = "asteroid" + ((random.nextInt(3)) + 1) + ".";
-        setImage(new Image(getClass().getResource("asteroid").toExternalForm()));
+        String pic = "asteroid" + ((random.nextInt(3)) + 1) + ".png";
+        setImage(new Image(getClass().getResource(pic).toExternalForm()));
     }
 }
