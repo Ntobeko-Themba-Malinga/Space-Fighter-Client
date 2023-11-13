@@ -1,19 +1,19 @@
 package org.space_fighter_client.game;
 
 public class Position {
-    private final int x;
-    private final int y;
+    private final double x;
+    private final double y;
 
-    public Position(int x, int y) {
+    public Position(double x, double y) {
         this.x = x;
         this.y = y;
     }
 
-    public int getX() {
+    public double getX() {
         return x;
     }
 
-    public int getY() {
+    public double getY() {
         return y;
     }
 
@@ -25,10 +25,10 @@ public class Position {
      * @return true if it is else false.
      */
     public boolean isIn(Position topLeftCorner, Position bottomRightCorner) {
-        int topX = topLeftCorner.getX();
-        int topY = topLeftCorner.getY();
-        int bottomX = bottomRightCorner.getX();
-        int bottomY = bottomRightCorner.getY();
+        double topX = topLeftCorner.getX();
+        double topY = topLeftCorner.getY();
+        double bottomX = bottomRightCorner.getX();
+        double bottomY = bottomRightCorner.getY();
         return (topX < this.x && this.x < bottomX)
                 && (bottomY < this.y && this.y < topY);
     }

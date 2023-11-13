@@ -2,4 +2,5 @@ background1.jpg: https://opengameart.org/content/space-background
 background2.jpg: https://opengameart.org/content/space-backgrounds-9
 NORMAL.png: https://opengameart.org/content/spaceship-6
 SNIPER.png: https://opengameart.org/content/2d-spaceship-10
+game background: https://opengameart.org/content/seamless-space-backgrounds
 

@@ -9,6 +9,7 @@ import org.space_fighter_client.Main;
 import org.space_fighter_client.communication.ServerRequest;
 import org.space_fighter_client.game.Position;
 import org.space_fighter_client.game.World;
+import org.space_fighter_client.game.objects.Player;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -17,7 +18,6 @@ import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
-import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
@@ -33,8 +33,7 @@ public class LaunchViewController {
     private AnchorPane pane;
     @FXML
     private Label errorLabel;
-    @FXML
-    private TextField robotType;
+    private String robotType;
     private ToggleGroup robotsGroup = new ToggleGroup();
 
     private World world;
@@ -62,22 +61,22 @@ public class LaunchViewController {
     private JsonNode buildAndSendLaunchRequest() {
         RadioButton rButton = (RadioButton) robotsGroup.getSelectedToggle();
         if (rButton == null) return null;
+        robotType = rButton.getText();
 
         JSONObject request = new JSONObject();
         request.put("command", "launch");
-        request.put("arguments", List.of(rButton.getText()));
+        request.put("arguments", List.of(robotType));
         request.put("token", Main.getToken());
         return ServerRequest.request(request.toString(), "/game");
     }
 
     public void launch(ActionEvent event) throws IOException {
         JsonNode serverResponse = buildAndSendLaunchRequest();
-        System.out.println(serverResponse.toString());
         if (serverResponse != null && serverResponse.get("data").get("result").asText().equalsIgnoreCase("OK")) {
             buildWorld(event, serverResponse);
-            this.world.start(serverResponse);
+            this.world.start(serverResponse, robotType);
         } else {
-            errorLabel.setText(serverResponse.get("data").get("message").asText());
+            errorLabel.setText("Choose a fighter!");
         }
     }
 
@@ -100,7 +99,7 @@ public class LaunchViewController {
             robotRadioButton.setToggleGroup(robotsGroup);
             robotInfo.getChildren().add(robotRadioButton);
 
-            ImageView imageView = new ImageView(getClass().getResource(robotType + ".PNG").toExternalForm());
+            ImageView imageView = new ImageView(Player.class.getResource(robotType + ".PNG").toExternalForm());
             imageView.setFitWidth(70);
             imageView.setFitHeight(70);
             robotInfo.getChildren().add(imageView);

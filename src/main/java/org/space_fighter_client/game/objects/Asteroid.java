@@ -1,16 +1,23 @@
 package org.space_fighter_client.game.objects;
 
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
+import java.util.Random;
 
-public class Asteroid extends Rectangle {
-    private final int SIZE = 10;
+import org.space_fighter_client.game.Position;
 
-    public Asteroid(double x, double y) {
-        setX(x);
-        setY(y);
-        setFill(Color.BROWN);
-        setWidth(SIZE);
-        setHeight(SIZE);
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+
+
+public class Asteroid extends ImageView {
+    private final int SIZE = 40;
+
+    public Asteroid(Position position) {
+        setX(position.getX());
+        setY(position.getY());
+        setFitWidth(SIZE);
+        setFitHeight(SIZE);
+        Random random = new Random();
+        String pic = "asteroid" + ((random.nextInt(3)) + 1) + ".";
+        setImage(new Image(getClass().getResource("asteroid").toExternalForm()));
     }
 }

@@ -2,9 +2,11 @@ package org.space_fighter_client.game;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import javafx.animation.AnimationTimer;
+
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.scene.image.ImageView;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
@@ -18,6 +20,7 @@ import org.space_fighter_client.util.SceneChanger;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class World {
     private final String endpoint = "/game";
@@ -68,9 +71,9 @@ public class World {
         lookTimer.start();
     }
 
-    public void start(JsonNode response) {
+    public void start(JsonNode response, String robotType) {
         root = new AnchorPane();
-        addPlayer(response);
+        addPlayer(response, robotType);
         addAsteroids(response);
         Scene scene = new Scene(root, WIDTH, HEIGHT);
 
@@ -133,6 +136,7 @@ public class World {
                 }
             }
         });
+        setBackgroundImage();
         stage.setScene(scene);
         stage.show();
     }
@@ -156,15 +160,16 @@ public class World {
     private double convertDirectionToDouble(String direction) {
         return switch(direction) {
             case "EAST" -> 0;
-            case "NORTH" -> 90;
+            case "SOUTH" -> 90;
             case "WEST" -> 180;
             default -> 270;
         };
     }
 
-    private void addPlayer(JsonNode response) {
+    private void addPlayer(JsonNode response, String robotType) {
         double[] convertedPlayerPos = convertResponseCoordsToLocal(response.get("data").get("status").get("position"));
-        this.player = new Player(convertedPlayerPos[0], convertedPlayerPos[1]);
+        this.player = new Player(new Position(convertedPlayerPos[0], convertedPlayerPos[1]), robotType);
+        System.out.println(response.get("data").get("status").get("direction").asText());
         this.player.setRotate(convertDirectionToDouble(response.get("data").get("status").get("direction").asText()));
         root.getChildren().add(player);
     }
@@ -180,7 +185,7 @@ public class World {
         for (JsonNode object : response.get("data").get("objects")) {
             if (object.get("type").asText().equalsIgnoreCase("ASTEROID")) {
                 double[] convertedPos = convertResponseCoordsToLocal(object.get("position"));
-                Asteroid asteroid = new Asteroid(convertedPos[0], convertedPos[1]);
+                Asteroid asteroid = new Asteroid(new Position(convertedPos[0], convertedPos[1]));
                 this.root.getChildren().add(asteroid);
             }
         }
@@ -218,5 +223,14 @@ public class World {
             root.getChildren().add(bullet);
             bullet.move(root);
         }
+    }
+
+    private void setBackgroundImage() {
+        Random random = new Random();
+        String pic = "game_background" + (random.nextInt(3) + 1) + ".png";
+        ImageView imageView = new ImageView(LaunchViewController.class.getResource(pic).toExternalForm());
+        imageView.setFitHeight(root.getHeight());
+        imageView.setFitWidth(root.getWidth());
+        root.getChildren().add(0, imageView);
     }
 }
