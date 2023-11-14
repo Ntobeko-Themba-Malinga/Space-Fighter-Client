@@ -1,16 +1,18 @@
 package org.space_fighter_client.game.objects;
 
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
+import org.space_fighter_client.game.Position;
 
-public class Enemy extends Rectangle {
-    private final int SIZE = 20;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
-    public Enemy(double x, double y) {
-        setX(x);
-        setY(y);
-        setFill(Color.BLUE);
-        setWidth(SIZE);
-        setHeight(SIZE);
+public class Enemy extends ImageView {
+    private final int SIZE = 40;
+
+    public Enemy(Position position) {
+        setX(position.getX());
+        setY(position.getY());
+        setFitWidth(SIZE);
+        setFitHeight(SIZE);
+        setImage(new Image(getClass().getResource("enemy.PNG").toExternalForm()));
     }
 }

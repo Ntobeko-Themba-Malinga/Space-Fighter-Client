@@ -195,7 +195,8 @@ public class World {
         for (JsonNode object : response.get("data").get("objects")) {
             if (object.get("type").asText().equalsIgnoreCase("ROBOT")) {
                 double[] convertedPos = convertResponseCoordsToLocal(object.get("position"));
-                Enemy enemy = new Enemy(convertedPos[0], convertedPos[1]);
+                Enemy enemy = new Enemy(new Position(convertedPos[0], convertedPos[1]));
+                enemy.setRotate(convertDirectionToDouble(object.get("direction").asText()));
                 enemies.add(enemy);
             }
         }
