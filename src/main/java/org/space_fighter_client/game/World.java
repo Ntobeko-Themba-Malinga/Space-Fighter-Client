@@ -2,13 +2,17 @@ package org.space_fighter_client.game;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import javafx.animation.AnimationTimer;
-
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.image.ImageView;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import org.json.JSONObject;
 import org.space_fighter_client.Main;
@@ -29,6 +33,9 @@ public class World {
     private final Stage stage;
 
     private Player player;
+    private VBox playerInfo;
+    private HBox shield;
+    private HBox bullet;
 
     private List<Enemy> enemies;
 
@@ -73,6 +80,29 @@ public class World {
 
     public void start(JsonNode response, String robotType) {
         root = new AnchorPane();
+        this.playerInfo = new VBox();
+
+        int iconSize = 50;
+        this.shield = new HBox();
+        this.shield.setPadding(new Insets(5));
+        ImageView icon = new ImageView(Player.class.getResource("shield.png").toExternalForm());
+        icon.setFitWidth(iconSize);
+        icon.setFitHeight(iconSize);
+        shield.getChildren().add(icon);
+
+        this.bullet = new HBox();
+        this.bullet.setPadding(new Insets(5));
+        ImageView icon2 = new ImageView(Player.class.getResource("bullet.png").toExternalForm());
+        icon2.setFitWidth(iconSize);
+        icon2.setFitHeight(iconSize);
+        bullet.getChildren().add(icon2);
+
+        this.playerInfo.setTranslateX(25);
+        this.playerInfo.setTranslateY(25);
+        playerInfo.getChildren().add(shield);
+        playerInfo.getChildren().add(bullet);
+        root.getChildren().add(playerInfo);
+
         addPlayer(response, robotType);
         addAsteroids(response);
         Scene scene = new Scene(root, WIDTH, HEIGHT);
@@ -82,7 +112,7 @@ public class World {
 
             @Override
             public void handle(long l) {
-                if ((l - lastUpdate) >= 28_000_000) {
+                if ((l - lastUpdate) >= 14_000_000) {
                     JSONObject req = buildRequestWithToken("look", new ArrayList<>());
                     updateWorld(ServerRequest.request(req.toString(), endpoint));
                     lastUpdate = l;
@@ -96,7 +126,7 @@ public class World {
 
             @Override
             public void handle(long l) {
-                if ((l - lastUpdate) >= 28_000_000) {
+                if ((l - lastUpdate) >= 14_000_000) {
                     JSONObject req = buildRequestWithToken("forward", List.of("1"));
                     updatePlayerPosition(ServerRequest.request(req.toString(), endpoint));
                     lastUpdate = l;
@@ -144,6 +174,7 @@ public class World {
     public void updateWorld(JsonNode response) {
         removeEnemies();
         addEnemies(response);
+        updatePlayerInfo(response);
     }
 
     private double[] convertResponseCoordsToLocal(JsonNode position) {
@@ -172,6 +203,21 @@ public class World {
         System.out.println(response.get("data").get("status").get("direction").asText());
         this.player.setRotate(convertDirectionToDouble(response.get("data").get("status").get("direction").asText()));
         root.getChildren().add(player);
+    }
+
+    private void updatePlayerInfo(JsonNode response) {
+        int numberOfShield = response.get("data").get("status").get("shields").asInt();
+        int numberOfShots = response.get("data").get("status").get("shots").asInt();
+        
+        Text shieldTxt = new Text("" + numberOfShield);
+        shieldTxt.setFill(Color.WHITE);
+        shield.getChildren().remove(1, shield.getChildren().size());
+        shield.getChildren().add(shieldTxt);
+
+        Text bulletText = new Text("" + numberOfShots);
+        bulletText.setFill(Color.WHITE);
+        bullet.getChildren().remove(1, bullet.getChildren().size());
+        bullet.getChildren().add(bulletText);
     }
 
     private void updatePlayerPosition(JsonNode response) {
@@ -209,7 +255,6 @@ public class World {
     }
 
     private void addBullet(JsonNode response) {
-        System.out.println(response + "\n\n");
         JsonNode hitObject = response.get("data").get("hit_object");
 
         if (hitObject.get(0) != null) {
