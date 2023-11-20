@@ -3,12 +3,14 @@ package org.space_fighter_client.game.objects;
 import org.space_fighter_client.game.Position;
 
 import javafx.animation.AnimationTimer;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 
-public class Bullet extends Rectangle {
+
+public class Bullet extends ImageView {
     private final int SIZE = 30;
+    private final int SPEED = 15;
     private final double direction;
     private final Position END;
     private int x;
@@ -17,11 +19,12 @@ public class Bullet extends Rectangle {
     public Bullet(Position start, Position end, double direction) {
         setX(start.getX());
         setY(start.getY());
-        setWidth(SIZE);
-        setHeight(SIZE);
+        setFitWidth(SIZE);
+        setFitHeight(SIZE);
         this.direction = direction;
         this.END = end;
-        setFill(Color.YELLOW);
+        setImage(new Image(getClass().getResource("d_bullet.png").toExternalForm()));
+        setRotate(direction);
         setXAndY();
     }
 
@@ -29,18 +32,17 @@ public class Bullet extends Rectangle {
         x = 0;
         y = 0;
         if (direction == 0) {
-            x = 1;
-        } else if (direction == 90.0) {
-            y = -1;
-        } else if (direction == 180.0) {
-            x = -1;
+            x = SPEED;
         } else if (direction == 270.0) {
-            y = 1;
+            y = -SPEED;
+        } else if (direction == 180.0) {
+            x = -SPEED;
+        } else if (direction == 90.0) {
+            y = SPEED;
         }
     }
 
-    public boolean move(AnchorPane root) {
-        System.out.println(direction);
+    public boolean move(AnchorPane root, Position worldSize) {
         Bullet bullet = this;
 
         new AnimationTimer() {
@@ -48,15 +50,20 @@ public class Bullet extends Rectangle {
 
             @Override
             public void handle(long l) {
-                if ((l - lastUpdate) >= 28_000_000) {
+                if ((l - lastUpdate) >= 14_000_000) {
                     setX(getX() + x);
                     setY(getY() + y);
                 }
 
-                if ((getX() > END.getX() && x == 1) ||
-                    (getX() < END.getX() && x == -1) ||
-                    (getY() > END.getY() && y == 1) ||
-                    (getY() < END.getY() && y == -1)) {
+                if (!(new Position(getX(), getY())).isIn(new Position(0, worldSize.getY()), new Position(worldSize.getX(), 0))) {
+                    root.getChildren().remove(bullet);
+                    stop();
+                }
+
+                if (END != null && ((getX() > END.getX() && x == SPEED) ||
+                    (getX() < END.getX() && x == -SPEED) ||
+                    (getY() > END.getY() && y == SPEED) ||
+                    (getY() < END.getY() && y == -SPEED))) {
                     root.getChildren().remove(bullet);
                     stop();
                 }

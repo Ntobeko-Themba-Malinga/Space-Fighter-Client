@@ -29,6 +29,7 @@ public class Position {
         double topY = topLeftCorner.getY();
         double bottomX = bottomRightCorner.getX();
         double bottomY = bottomRightCorner.getY();
+ 
         return (topX < this.x && this.x < bottomX)
                 && (bottomY < this.y && this.y < topY);
     }

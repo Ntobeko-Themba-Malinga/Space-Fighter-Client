@@ -258,18 +258,24 @@ public class World {
 
     private void addBullet(JsonNode response) {
         JsonNode hitObject = response.get("data").get("hit_object");
+        Position bulletStart = new Position((int)player.getX(), (int)player.getY());
+        Position bulletEnd = null;
 
         if (hitObject.get(0) != null) {
             double[] convertedPos = convertResponseCoordsToLocal(
                 response.get("data").get("hit_object").get(0).get("position")
             );
-            Bullet bullet = new Bullet(
-                new Position((int)player.getX(), (int)player.getY()), 
-                new Position((int)convertedPos[0], (int)convertedPos[1]),
-                player.getRotate()
-            );
+            bulletEnd = new Position((int)convertedPos[0], (int)convertedPos[1]);
+        }
+        Bullet bullet = new Bullet(
+            bulletStart, 
+            bulletEnd,
+            player.getRotate()
+        );
+
+        if (response.get("data").get("status").get("shots").asInt() >= 0) {
             root.getChildren().add(bullet);
-            bullet.move(root);
+            bullet.move(root, new Position(WIDTH, HEIGHT));
         }
     }
 
