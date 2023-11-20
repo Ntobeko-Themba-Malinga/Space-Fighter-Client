@@ -89,6 +89,7 @@ public class World {
         icon.setFitWidth(iconSize);
         icon.setFitHeight(iconSize);
         shield.getChildren().add(icon);
+        shield.getChildren().add(new Text());
 
         this.bullet = new HBox();
         this.bullet.setPadding(new Insets(5));
@@ -96,6 +97,7 @@ public class World {
         icon2.setFitWidth(iconSize);
         icon2.setFitHeight(iconSize);
         bullet.getChildren().add(icon2);
+        bullet.getChildren().add(new Text());
 
         this.playerInfo.setTranslateX(25);
         this.playerInfo.setTranslateY(25);
@@ -211,12 +213,12 @@ public class World {
         
         Text shieldTxt = new Text("" + numberOfShield);
         shieldTxt.setFill(Color.WHITE);
-        shield.getChildren().remove(1, shield.getChildren().size());
+        shield.getChildren().remove(shield.getChildren().size()-1);
         shield.getChildren().add(shieldTxt);
 
         Text bulletText = new Text("" + numberOfShots);
         bulletText.setFill(Color.WHITE);
-        bullet.getChildren().remove(1, bullet.getChildren().size());
+        bullet.getChildren().remove(bullet.getChildren().size()-1);
         bullet.getChildren().add(bulletText);
     }
 
