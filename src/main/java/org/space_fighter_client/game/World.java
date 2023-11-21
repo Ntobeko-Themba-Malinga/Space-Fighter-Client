@@ -179,15 +179,17 @@ public class World {
         updatePlayerInfo(response);
     }
 
-    private double[] convertResponseCoordsToLocal(JsonNode position) {
-        double xAdjuster = (WIDTH/2);
-        double yAdjuster = (HEIGHT/2);
+    private double convertCoordsToLocal(double coord, boolean w) {
+        double multiplier = (w) ? WIDTH_MULTIPLIER : -HEIGHT_MULTIPLIER;
+        double coordAdjuster = (w) ? (WIDTH/2) : (HEIGHT/2);
+        return (coord * multiplier) + coordAdjuster;
+    }
 
-        double x = position.get(0).asDouble();
-        double y = position.get(1).asDouble();
-        x = (x * WIDTH_MULTIPLIER) + xAdjuster;
-        y = ((-1 * y) * HEIGHT_MULTIPLIER) + yAdjuster;
-        return new double[] {x, y};
+    private double[] convertResponseCoordsToLocal(JsonNode position) {
+        return new double[] {
+            convertCoordsToLocal(position.get(0).asDouble(), true),
+            convertCoordsToLocal(position.get(1).asDouble(), false)
+        };
     }
 
     private double convertDirectionToDouble(String direction) {
@@ -200,8 +202,14 @@ public class World {
     }
 
     private void addPlayer(JsonNode response, String robotType) {
+        System.out.println("\n\n" + response.toString());
         double[] convertedPlayerPos = convertResponseCoordsToLocal(response.get("data").get("status").get("position"));
-        this.player = new Player(new Position(convertedPlayerPos[0], convertedPlayerPos[1]), robotType);
+        this.player = new Player(
+            new Position(convertedPlayerPos[0], convertedPlayerPos[1]), 
+            robotType,
+            40,
+            40
+        );
         System.out.println(response.get("data").get("status").get("direction").asText());
         this.player.setRotate(convertDirectionToDouble(response.get("data").get("status").get("direction").asText()));
         root.getChildren().add(player);
@@ -233,7 +241,16 @@ public class World {
         for (JsonNode object : response.get("data").get("objects")) {
             if (object.get("type").asText().equalsIgnoreCase("ASTEROID")) {
                 double[] convertedPos = convertResponseCoordsToLocal(object.get("position"));
-                Asteroid asteroid = new Asteroid(new Position(convertedPos[0], convertedPos[1]));
+                double topX = object.get("top_left_corner").get(0).asDouble();
+                double topY = object.get("top_left_corner").get(1).asDouble();
+                double bottomX = object.get("bottom_right_corner").get(0).asDouble();
+                double bottomY = object.get("bottom_right_corner").get(1).asDouble();
+
+                Asteroid asteroid = new Asteroid(
+                    new Position(convertedPos[0], convertedPos[1])
+                    // convertCoordsToLocal(bottomX - topX, true),
+                    // convertCoordsToLocal(topY - bottomY, false)
+                );
                 this.root.getChildren().add(asteroid);
             }
         }
@@ -273,7 +290,7 @@ public class World {
             player.getRotate()
         );
 
-        if (response.get("data").get("status").get("shots").asInt() >= 0) {
+        if (response.get("data").get("status").get("shots").asInt() > 0) {
             root.getChildren().add(bullet);
             bullet.move(root, new Position(WIDTH, HEIGHT));
         }
